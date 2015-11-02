@@ -81,6 +81,10 @@
         this.float = true;
     };
 
+    GridStackEngine.prototype.getNodeByDOMId = function(domId) {
+        return _.findWhere(this.nodes, {domId:domId})
+    };
+
     GridStackEngine.prototype.commit = function() {
         this._update_counter = 0;
         if (this._update_counter == 0) {
@@ -608,6 +612,7 @@
         el.addClass(this.opts.item_class);
 
         var node = self.grid.add_node({
+            domId: el.attr('id'),
             x: el.attr('data-gs-x'),
             y: el.attr('data-gs-y'),
             width: el.attr('data-gs-width'),
@@ -737,8 +742,22 @@
 
     GridStack.prototype.remove_widget = function(el, detach_node) {
         detach_node = typeof detach_node === 'undefined' ? true : detach_node;
-        el = $(el);
-        var node = el.data('_gridstack_node');
+
+        var node;
+
+        /**
+         * DIRTY HACK
+         * For some reasone Blaze has already cleaned up el.data('_gridstack_node')
+         * To be able to still remove the node, look it up by domId
+         */
+        if(_.isString(el)) {
+            node = this.grid.getNodeByDOMId(el);
+            el = $('#' + el);
+        } else {
+            node = el.data('_gridstack_node');
+            el = $(el);
+        }
+
         this.grid.remove_node(node);
         el.removeData('_gridstack_node');
         this._update_container_height();
